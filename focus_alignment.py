@@ -123,28 +123,69 @@ def source_phrase(s):
     s=norm(s)
     return s.replace('i m','im').replace('my name s','my name is').replace('what s','what is')
 
-def relation(source, pep, kind):
+def word_form(token):
+    number_names=('zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty')
+    if token.isdigit() and int(token)<len(number_names):return number_names[int(token)]
+    if len(token)>4 and token.endswith('ies'):return token[:-3]+'y'
+    if len(token)>3 and token.endswith('s') and not token.endswith(('ss','us','is')):return token[:-1]
+    return token
+
+def vocab_in_structure(source,pep):
+    """A target word used in a taught utterance is already taught vocabulary."""
+    spoken=re.sub(r'\((\d+)\)',r' \1 ',source) # a printed age is a spoken example
+    spoken=re.sub(r'\([^)]*\)',' ',spoken) # other placeholders are teacher notation
+    spoken=re.sub(r'\b(?:A\+B|C\+D|S\d+)\s*:',' ',spoken,flags=re.I)
+    spoken=re.sub(r'(?<=\w)-(?=\w)','',spoken) # T-shirt is one lexical item
+    source_words=[word_form(w) for w in norm(spoken).split()]
+    target_words=[word_form(w) for w in norm(re.sub(r'(?<=\w)-(?=\w)','',pep)).split()]
+    if not target_words:return False
+    if target_words==['at']:return False # e.g. "look at" is not location "at"
+    n=len(target_words)
+    compound_exceptions={('sand','box'),('toy','shop'),('red','panda'),('which','one')}
+    for i in range(len(source_words)-n+1):
+        if source_words[i:i+n]!=target_words:continue
+        if n==1 and i>0 and (source_words[i-1],source_words[i]) in compound_exceptions:continue
+        return True
+    return False
+
+def clauses(s):
+    return [p.strip() for p in re.split(r'[.!?]+',s) if norm(p)]
+
+def proper_name_example(s,prefix):
+    m=re.fullmatch(re.escape(prefix)+r"\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\.?",s.strip())
+    return bool(m)
+
+def relation(source, pep, kind,tag=None,known_vocab=None):
     a,b=source_phrase(source),source_phrase(pep)
     if not a or not b:return None
     if a==b:return 'exact'
     if kind=='vocab':
-        if a.rstrip('s')==b.rstrip('s') and min(len(a),len(b))>3:return 'related'
+        if [word_form(w) for w in a.split()]==[word_form(w) for w in b.split()]:return 'inflected'
         return None
     if (a in {'hello','hi'} and b.startswith(a+' ')) or (b in {'hello','hi'} and a.startswith(b+' ')):return 'related'
+    # Names in textbook examples instantiate the same taught frame.
+    if ('my name' in a and proper_name_example(pep,'My name is')) or ('my name' in a and proper_name_example(pep,"My name's")):
+        if re.search(r"my name(?: is|'s|’s)(?:\s+(?:[A-Z][a-z]+|[…\.]+))?",source,re.I):return 'exact'
+    if (re.search(r"\bI['’]m\s*(?:\(name\)|[…\.]+)",source,re.I) or 'im name' in a) and proper_name_example(pep,"I'm"):
+        return 'exact'
     if re.search(r'\([^)]{1,25}\)',source):
         slots=re.findall(r'\(([^)]{1,25})\)',source)
-        template=source_phrase(re.sub(r'\([^)]{1,25}\)',' ZZZ ',source))
-        pattern=re.escape(template)
-        for key in slots:
-            key=norm(key)
-            if key in {'six','age'}:replacement=r'(?:[0-9]+|one|two|three|four|five|six|seven|eight|nine|ten)'
-            elif key in {'blue','colour','color'}:replacement=r'(?:red|blue|yellow|green|orange|purple|pink|grey|gray|black|white|brown)'
-            elif key=='name':replacement=r'(?!from\b|one\b|two\b|three\b|four\b|five\b|six\b|seven\b|eight\b|nine\b|ten\b)[a-z]+(?: [a-z]+)?'
-            else:replacement=r'[a-z]+(?: [a-z]+)?'
-            pattern=pattern.replace('zzz',replacement,1)
-        pattern='^'+pattern+'$'
-        if re.fullmatch(pattern,b):return 'exact'
-        if 'six' in slots and b.startswith('im ') and 'year' in b:return 'related'
+        if len(slots)==1:
+            key=norm(slots[0]);template=source_phrase(re.sub(r'\([^)]{1,25}\)',' ZZZ ',source))
+            pat='^'+re.escape(template).replace('zzz',r'(.+?)')+'$'
+            m=re.fullmatch(pat,b)
+            if m:
+                fill=norm(m[1])
+                number_words={'one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'}
+                if key.isdigit() or key in number_words:
+                    if fill.isdigit() or fill in number_words:return 'exact'
+                elif key=='name':
+                    if proper_name_example(pep,"I'm") or proper_name_example(pep,'This is'):return 'exact'
+                elif key=='ok':
+                    if fill in {'ok','okay','fine'}:return 'exact'
+                elif tag and word_allowed(tag,key) and word_allowed(tag,fill) and (fill==key or fill in (known_vocab or set())):
+                    return 'exact'
+        if norm(slots[0]) in {'six','8','6'} and b.startswith('im ') and 'year' in b:return 'related'
     # Templates and named examples represent the same sentence frame.
     if a in b or b in a:
         if min(len(a),len(b))>=6:return 'related'
@@ -210,6 +251,37 @@ def for_card(rows,c,pep):
     if name in CARD_RULES:return [r for r in rows if r['type'] in CARD_RULES[name]]
     return rows
 
+SHARED_RELATIONS={'exact','inflected','in-pattern','composed'}
+
+def exact_structure_sources(text,known,tag,known_vocab):
+    for x in known:
+        if x['type']!='structure':continue
+        if relation(x['text'],text,'structure',tag,known_vocab)=='exact':return [x]
+        if any(relation(part,text,'structure',tag,known_vocab)=='exact' for part in clauses(x['text'])):return [x]
+        if norm(text) in {'hi','hello'} and vocab_in_structure(x['text'],text):return [x]
+    return []
+
+def match_known(row,known,tag,known_vocab):
+    if row['type']=='vocab':
+        for x in known:
+            if x['type']=='vocab':
+                rel=relation(x['text'],row['text'],'vocab',tag)
+                if rel in SHARED_RELATIONS:return rel,[x]
+        for x in known:
+            if x['type']=='structure' and vocab_in_structure(x['text'],row['text']):
+                return 'in-pattern',[x]
+        return 'new',[]
+    exact=exact_structure_sources(row['text'],known,tag,known_vocab)
+    if exact:return 'exact',exact
+    parts=clauses(row['text'])
+    if len(parts)>1:
+        matched=[exact_structure_sources(part,known,tag,known_vocab) for part in parts]
+        if all(matched):return 'composed',[x for group in matched for x in group]
+    for x in known:
+        if x['type']=='structure' and relation(x['text'],row['text'],'structure',tag,known_vocab)=='related':
+            return 'related',[x]
+    return 'new',[]
+
 def build():
     src=json.loads((ROOT/'focus_sources.json').read_text(encoding='utf-8'))
     pep=src['pepUnits']; source=src['sourceUnits']
@@ -225,6 +297,7 @@ def build():
         done=[]; topics=[]
         for c in u['topics']:
             known=prior+done+c['sourceItems']
+            known_vocab={norm(x['text']) for x in known if x['type']=='vocab'}
             rows=[]
             for p in pep:
                 if p['grade']<=u['gradeMax']:
@@ -232,11 +305,10 @@ def build():
             rows=for_card(rows,c,pep)
             shared=[]; additions=[]
             for r in rows:
-                matches=[(x,relation(x['text'],r['text'],r['type'])) for x in known if x['type']==r['type']]
-                exact=next((x for x,rel in matches if rel=='exact'),None)
-                related=next((x for x,rel in matches if rel=='related'),None)
-                entry={**r,'relation':'exact' if exact else 'related' if related else 'new','sourceMatch':(exact or related or {}).get('text')}
-                (shared if exact else additions).append(entry)
+                rel,matches=match_known(r,known,c['tag'],known_vocab)
+                source_matches=list(dict.fromkeys(x['text'] for x in matches))
+                entry={**r,'relation':rel,'sourceMatch':source_matches[0] if source_matches else None,'sourceMatches':source_matches}
+                (shared if rel in SHARED_RELATIONS else additions).append(entry)
             # Dedupe target/reading equivalents, retaining target as the lead
             # evidence and a reading link as an extra reference.
             def dedupe(items):

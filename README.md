@@ -8,8 +8,8 @@ The current edition compares **Power Up 1**, **iShow Act 3**, and **iShow Play 1
 
 Choose a book and unit, then read each lesson topic from left to right:
 
-- **The source lesson** lists vocabulary, sentence patterns, and phonics from the Power Up Teacher's Book or the iShow TLS workbook.
-- **Already aligned with PEP** holds exact wording or a directly instantiated source pattern. Expand the green section to inspect every source page.
+- **The source lesson** lists vocabulary, sentence patterns, and phonics from the Power Up Teacher's Book or the iShow TLS workbook. Words used in a taught pattern, even when absent from its separate vocabulary list, appear as “Words also used in patterns.”
+- **Already aligned with PEP** includes explicit vocabulary, words used in taught patterns, and sentence frames already taught. Expand the green section to inspect the PEP evidence.
 - **Consider adding from PEP** holds new vocabulary and sentence patterns. A “Related form” badge marks a similar expression that is still worth teaching explicitly.
 - PEP rows link to the textbook page and identify a **target** or **main reading/dialogue**. Extra dialogue examples are collapsed inside each topic and can be revealed or filtered.
 
@@ -19,11 +19,11 @@ The search box finds units, topics, words, patterns, and PEP entries. Clicking a
 
 | Source book | PEP ceiling | Prior learning counted |
 | --- | --- | --- |
-| iShow Act 3 | Grade 3 | Earlier Act 3 topics |
+| iShow Act 3 | Grade 4 | Earlier Act 3 topics |
 | Power Up 1 | Grade 4 | Earlier PU1 units, including the separate welcome Unit 0 |
 | iShow Play 1 | Grade 4 | Act 3 and earlier Play 1 topics |
 
-Each topic card compares only its subject with relevant PEP items, rather than adding every word from a loosely related PEP unit. Exact wording taught earlier in the same source path is treated as already known. Related forms stay in the additions column. Core lessons, cross-curricular sections, literature, review, and phonics appear as source topics. The PEP target and main-dialogue inventory currently covers Grades 3 and 4. PEP phonics targets are not indexed yet, so phonics cards show the source curriculum only.
+Each topic card compares only its subject with relevant PEP items, rather than adding every word from a loosely related PEP unit. Explicit words and words spoken in sentence patterns taught earlier in the same source path count as prior learning. Related expressions stay in the additions column. Core lessons, cross-curricular sections, literature, review, and phonics appear as source topics. The PEP target and main-dialogue inventory currently covers Grades 3 and 4. PEP phonics targets are not indexed yet, so phonics cards show the source curriculum only.
 
 The full previously collected catalog remains in [`catalog.json`](catalog.json) for later expansion to Power Up 2–4, iShow Play 2–4, and the higher PEP grades. The focused site reads [`focus.json`](focus.json).
 

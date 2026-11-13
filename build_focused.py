@@ -168,6 +168,13 @@ def classify_word(u,x):
 
 def classify_structure(u,x):
  s=norm(x['text'])
+ if u['id']=='IS-Act3-3':
+  return 'Numbers and age' if re.search(r'how many|there are [0-9]|there is [0-9]',s) else 'Playground'
+ if u['id']=='IS-Act3-5':
+  if s.endswith('thank you'):return 'Opening and review'
+  if re.search(r'how many|there are [0-9]|there is [0-9]|there are (one|two|three|four|five)|\bi have [0-9]',s):return 'Numbers and age'
+  if re.search(r'which one do you like|how much|\bbuy\b|\bplease\b',s):return 'Shopping'
+  return 'Toys and presents'
  if s.startswith('this is student'):return choose_available(u,'Greetings') or 'Opening and review'
  if (re.search(r'hello|^hi\b|good morning|nice to meet|your name|my name|how are you|i m fine',s) and not re.search(r'our library|fire station|hospital|toy store',s)) or re.search(r'^(thank you|goodbye|i m ok|yes thank you)\b',s) or s.endswith('thank you'):return choose_available(u,'Greetings') or 'Opening and review'
  if re.search(r'what does .* do|he s a (pilot|cashier|guide|teacher)|who are you going to see|going to see|see a (guide|pilot|librarian)',s):return choose_available(u,'Jobs')
@@ -198,15 +205,20 @@ def build_ishow():
  for raw in read(ROOT/'sources'/'ishow_inventory.json'):
   if raw['level'] not in ('Act 3','Play 1'):continue
   u={k:raw[k] for k in ('id','course','level','number','title','source')}
-  u['gradeMax']=3 if u['level']=='Act 3' else 4;u['topics']=[]
+  u['gradeMax']=4;u['topics']=[]
   for name in ISHOW_TOPIC_ORDER[u['id']]:add_card(u,name)
   review=[]
+  # The TLS phonics cell also repeats ordinary lesson dialogue after the
+  # sound/blend material. Keep only the phonics prefix, including its chants.
+  structures={norm(x['text']) for x in raw['structures']}
+  phonics_cutoff=next((i for i,x in enumerate(raw['phonics']) if norm(x['text']) in structures),len(raw['phonics']))
+  phonics_cutoff=min(phonics_cutoff,{'IS-Play1-5':5,'IS-Play1-8':6}.get(u['id'],phonics_cutoff))
   for field,kind in (('vocabulary','vocab'),('structures','structure'),('phonics','phonics')):
-   for x in raw[field]:
+   for i,x in enumerate(raw[field]):
     if kind=='vocab' and norm(x['text'])=='ok1':continue
     if kind=='structure' and '_' in x['text']:continue
-    if kind=='structure' and norm(x['text']) in {'this is','that s'}:continue
-    if kind=='phonics' and any(norm(x['text'])==norm(y['text']) for y in raw['structures']):continue
+    if kind=='structure' and norm(x['text']) in {'this is','that s','there is a','there are'}:continue
+    if kind=='phonics' and i>=phonics_cutoff:continue
     if str(x.get('session','')).startswith('10.'):review.append((x,kind));continue
     name='Phonics' if kind=='phonics' else classify_word(u,x) if kind=='vocab' else classify_structure(u,x)
     if not name:
