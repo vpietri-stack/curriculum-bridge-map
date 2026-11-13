@@ -1,7 +1,7 @@
 """Focused data checks for the specific source and comparison errors reported."""
 import json
 from pathlib import Path
-from focus_alignment import vocab_in_structure
+from focus_alignment import relation, vocab_in_structure
 
 root=Path(__file__).parent
 d=json.loads((root/'focus.json').read_text(encoding='utf-8'))
@@ -29,6 +29,15 @@ assert 'colour' in texts(topic('PU1-0','Colours')['shared'])
 assert 'old' in texts(topic('PU1-0','Numbers and age')['shared'])
 assert 'nice' in texts(topic('IS-Play1-1','Greetings')['shared'])
 assert 'nice' not in texts(topic('IS-Play1-1','Greetings')['additions'])
+jobs=topic('IS-Act3-1','Jobs')
+assert "she's a doctor." in texts(jobs['shared'])
+assert "she's a teacher." in texts(jobs['shared'])
+assert "he's a pe teacher." in texts(jobs['additions'])
+assert "she's a nurse." not in texts(jobs['shared'])
+assert relation("He/She's a (guide)","She's a doctor.",'structure','jobs',{'guide','doctor'},{'guide','doctor'})=='exact'
+assert relation("He/She's a (guide)","She's a nurse.",'structure','jobs',{'guide','doctor'},{'guide','doctor'}) is None
+assert relation("It's (blue).","It's healthy.",'structure','health',{'blue','healthy'},{'healthy'}) is None
+assert "it's healthy." in texts(topic('PU1-7','Healthy body')['additions'])
 assert 'where are you from?' in texts(topic('IS-Play1-1','Greetings')['additions'])
 assert "i'm from the uk." in texts(topic('IS-Play1-1','Greetings')['additions'])
 assert {'ten','six','seven','eight'}<=texts(topic('IS-Play1-1','Numbers and age')['shared'])

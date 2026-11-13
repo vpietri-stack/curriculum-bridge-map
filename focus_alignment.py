@@ -155,7 +155,19 @@ def proper_name_example(s,prefix):
     m=re.fullmatch(re.escape(prefix)+r"\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\.?",s.strip())
     return bool(m)
 
-def relation(source, pep, kind,tag=None,known_vocab=None):
+def subject_variants(source):
+    """Expand the explicit he/she choice in a printed teaching pattern."""
+    m=re.search(r"\b(He|She)/(He|She)(['’]s)?\b",source,flags=re.I)
+    if not m:return [source]
+    suffix=m.group(3) or ''
+    return [source[:m.start()]+subject+suffix+source[m.end():] for subject in (m.group(1),m.group(2))]
+
+def relation(source, pep, kind,tag=None,known_vocab=None,topic_vocab=None):
+    if kind=='structure':
+        variants=subject_variants(source)
+        if len(variants)>1:
+            relations=[relation(v,pep,kind,tag,known_vocab,topic_vocab) for v in variants]
+            return next((r for r in relations if r=='exact'),None) or next((r for r in relations if r=='related'),None)
     a,b=source_phrase(source),source_phrase(pep)
     if not a or not b:return None
     if a==b:return 'exact'
@@ -183,7 +195,7 @@ def relation(source, pep, kind,tag=None,known_vocab=None):
                     if proper_name_example(pep,"I'm") or proper_name_example(pep,'This is'):return 'exact'
                 elif key=='ok':
                     if fill in {'ok','okay','fine'}:return 'exact'
-                elif tag and word_allowed(tag,key) and word_allowed(tag,fill) and (fill==key or fill in (known_vocab or set())):
+                elif tag and (word_allowed(tag,key) or any(option.strip() in (topic_vocab or set()) for option in key.split('/'))) and word_allowed(tag,fill) and fill in (known_vocab or set()):
                     return 'exact'
         if norm(slots[0]) in {'six','8','6'} and b.startswith('im ') and 'year' in b:return 'related'
     # Templates and named examples represent the same sentence frame.
@@ -253,15 +265,15 @@ def for_card(rows,c,pep):
 
 SHARED_RELATIONS={'exact','inflected','in-pattern','composed'}
 
-def exact_structure_sources(text,known,tag,known_vocab):
+def exact_structure_sources(text,known,tag,known_vocab,topic_vocab):
     for x in known:
         if x['type']!='structure':continue
-        if relation(x['text'],text,'structure',tag,known_vocab)=='exact':return [x]
-        if any(relation(part,text,'structure',tag,known_vocab)=='exact' for part in clauses(x['text'])):return [x]
+        if relation(x['text'],text,'structure',tag,known_vocab,topic_vocab)=='exact':return [x]
+        if any(relation(part,text,'structure',tag,known_vocab,topic_vocab)=='exact' for part in clauses(x['text'])):return [x]
         if norm(text) in {'hi','hello'} and vocab_in_structure(x['text'],text):return [x]
     return []
 
-def match_known(row,known,tag,known_vocab):
+def match_known(row,known,tag,known_vocab,topic_vocab):
     if row['type']=='vocab':
         for x in known:
             if x['type']=='vocab':
@@ -271,14 +283,14 @@ def match_known(row,known,tag,known_vocab):
             if x['type']=='structure' and vocab_in_structure(x['text'],row['text']):
                 return 'in-pattern',[x]
         return 'new',[]
-    exact=exact_structure_sources(row['text'],known,tag,known_vocab)
+    exact=exact_structure_sources(row['text'],known,tag,known_vocab,topic_vocab)
     if exact:return 'exact',exact
     parts=clauses(row['text'])
     if len(parts)>1:
-        matched=[exact_structure_sources(part,known,tag,known_vocab) for part in parts]
+        matched=[exact_structure_sources(part,known,tag,known_vocab,topic_vocab) for part in parts]
         if all(matched):return 'composed',[x for group in matched for x in group]
     for x in known:
-        if x['type']=='structure' and relation(x['text'],row['text'],'structure',tag,known_vocab)=='related':
+        if x['type']=='structure' and relation(x['text'],row['text'],'structure',tag,known_vocab,topic_vocab)=='related':
             return 'related',[x]
     return 'new',[]
 
@@ -298,6 +310,7 @@ def build():
         for c in u['topics']:
             known=prior+done+c['sourceItems']
             known_vocab={norm(x['text']) for x in known if x['type']=='vocab'}
+            topic_vocab={norm(x['text']) for x in c['sourceItems'] if x['type']=='vocab'}
             rows=[]
             for p in pep:
                 if p['grade']<=u['gradeMax']:
@@ -305,7 +318,7 @@ def build():
             rows=for_card(rows,c,pep)
             shared=[]; additions=[]
             for r in rows:
-                rel,matches=match_known(r,known,c['tag'],known_vocab)
+                rel,matches=match_known(r,known,c['tag'],known_vocab,topic_vocab)
                 source_matches=list(dict.fromkeys(x['text'] for x in matches))
                 entry={**r,'relation':rel,'sourceMatch':source_matches[0] if source_matches else None,'sourceMatches':source_matches}
                 (shared if rel in SHARED_RELATIONS else additions).append(entry)
