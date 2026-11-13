@@ -1,4 +1,34 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Curriculum Atlas · iShow, Power Up & PEP</title><meta name="description" content="A page referenced curriculum comparison for Power Up, iShow and revised PEP English."><link rel="stylesheet" href="style.css?v=5"></head><body><div class="app-shell">
-<header class="app-header"><a class="brand" href="#" aria-label="Curriculum Atlas home"><span class="brand-icon">▦</span><span><strong>Curriculum Atlas</strong><small>iShow · Power Up · PEP</small></span></a><label class="global-search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search units, words, themes or grammar…" aria-label="Search all curricula"><kbd>/</kbd></label><span class="header-note">Revised PEP · Grades 3–6</span></header>
-<div class="layout"><aside class="navigator" aria-label="Curriculum navigation"><div class="nav-top"><div class="eyebrow">EXPLORE</div><div id="course-nav" class="course-nav"></div><label class="select-label" for="level-select">LEVEL / BOOK</label><select id="level-select"></select></div><div class="unit-list-head"><span>UNITS & TOPICS</span><span id="unit-count"></span></div><div id="unit-list" class="unit-list"></div><div class="nav-footer">Source pages and evidence labels appear on each match.</div></aside><main class="content"><div id="search-results" class="search-results" hidden></div><div id="unit-view"></div></main><aside id="evidence" class="evidence" aria-label="Item evidence"><div class="empty-evidence"><span class="empty-icon">↗</span><h3>Choose a word or structure</h3><p>Click an item to see where it appears in the other curricula, with exact and related matches separated.</p></div></aside></div>
-<footer><span>Curriculum Atlas · Teaching planning reference</span><span><a href="https://www.ai2book.com/diandu/" target="_blank" rel="noopener">PEP source ↗</a> · <a href="https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995564.html" target="_blank" rel="noopener">Publisher overview ↗</a></span></footer></div><script src="app.js?v=5"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Curriculum Atlas · Topic comparison</title>
+  <meta name="description" content="Topic-by-topic comparisons of Power Up 1, iShow Act 3 and Play 1 with revised PEP English Grades 3–4.">
+  <link rel="stylesheet" href="style.css?v=10">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#PU1-0"><span class="brand-mark">◫</span><span><strong>Curriculum Atlas</strong><small>Plan a lesson across curricula</small></span></a>
+    <div class="search-wrap">
+      <label for="search" class="sr-only">Search units, topics, words and sentence patterns</label>
+      <span class="search-icon">⌕</span><input id="search" type="search" autocomplete="off" placeholder="Search a unit, topic, word or pattern…">
+      <div id="search-results" class="search-results" hidden></div>
+    </div>
+    <span class="scope-pill">PEP Grades 3–4</span>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="side-top"><p class="eyebrow">SELECT A BOOK</p><div id="book-nav" class="book-nav"></div></div>
+      <div class="side-label"><span>UNITS</span><span id="unit-count"></span></div>
+      <nav id="unit-nav" class="unit-nav" aria-label="Units"></nav>
+      <div class="sidebar-note">Act 3 compares with Grade 3. PU1 and Play 1 compare with Grades 3–4.</div>
+    </aside>
+    <main id="main" class="main"></main>
+  </div>
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="drawer" class="drawer" aria-label="PEP evidence" aria-hidden="true"></aside>
+  <footer><span>Teacher planning reference · Source links open the textbook page</span><a href="https://www.ai2book.com/diandu/" target="_blank" rel="noopener">ai2book textbook library ↗</a></footer>
+  <script src="app.js?v=10"></script>
+</body>
+</html>

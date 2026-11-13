@@ -1,24 +1,42 @@
 # Curriculum Atlas
 
-An English-language, unit-first comparison of Power Up, iShow 2.0, and the revised PEP public-school English series. The standalone site is published at [Curriculum Atlas](https://vpietri-stack.github.io/curriculum-bridge-map/).
+[Open the public teaching map](https://vpietri-stack.github.io/curriculum-bridge-map/).
 
-## What the map covers
+The current edition compares **Power Up 1**, **iShow Act 3**, and **iShow Play 1** with the revised PEP public-school English textbooks. It is a standalone static site with no login or backend.
 
-- **Power Up 1–4:** Nine units per level, indexed from the Teacher's Books in the local `PU - Think` Drive folder. Vocabulary in PU1–3 was checked against the separate word-list workbooks for OCR spelling. The map does not use Power Up TLS files. Grammar targets were edited into readable teaching patterns from the Teacher's Book language-practice panels; the cited scan page accompanies each pattern.
-- **iShow 2.0:** Act 3, then Play 1–4, with nine topics per level. Vocabulary and sentence structures come from the TLS workbooks. Session 5 phonics and review material is shown separately.
-- **PEP:** Revised three-year-starting-point books from Grade 3 Fall through Grade 6 Fall: 42 units across seven books. Grade 6 Spring is not listed in the revised sequence on the source site as of 12 November 2026. PEP vocabulary and useful expressions come from the unit appendices, linked to their first unit occurrence where found. Main reading and dialogue lines are separately indexed with page links. The site distinguishes PEP target evidence from reading/dialogue evidence.
+## How to use it
 
-Choose a unit, then click vocabulary or a structure to see exact and related matches. **Add from PEP** suggests items absent from the selected Power Up or iShow unit, across selected related PEP units. Related forms remain visible and labelled. Filter additions by grade, theme or grammar concept, and optionally include main reading/dialogue lines. Global search accepts unit labels, words, themes, and grammar terms. Choose a PEP unit to look up matches in reverse.
+Choose a book and unit, then read each lesson topic from left to right:
 
-## Sources and limits
+- **The source lesson** lists vocabulary, sentence patterns, and phonics from the Power Up Teacher's Book or the iShow TLS workbook.
+- **Already aligned with PEP** holds exact wording or a directly instantiated source pattern. Expand the green section to inspect every source page.
+- **Consider adding from PEP** holds new vocabulary and sentence patterns. A “Related form” badge marks a similar expression that is still worth teaching explicitly.
+- PEP rows link to the textbook page and identify a **target** or **main reading/dialogue**. Extra dialogue examples are collapsed inside each topic and can be revealed or filtered.
 
-- [PEP textbooks on ai2book](https://www.ai2book.com/diandu/)
-- [People's Education Press overview of the revised series](https://www.pep.com.cn/xw/zt/hd/12/xjcjs/xx/202409/t20240920_1995564.html)
+The search box finds units, topics, words, patterns, and PEP entries. Clicking a source item shows its PEP evidence. Clicking a PEP entry shows matching Power Up and iShow topics.
 
-The map contains page links, short vocabulary items, teaching patterns, and selected short reading/dialogue lines. It does not redistribute PDFs, images, audio, or full textbooks. OCR and automatic theme grouping can still make errors; use the linked PEP page and the cited Teacher's Book scan page when planning lessons. Related matches and suggested PEP units are planning aids, not claims of identical coverage or exam priority.
+## Scope and comparison rules
 
-## Local use and regeneration
+| Source book | PEP ceiling | Prior learning counted |
+| --- | --- | --- |
+| iShow Act 3 | Grade 3 | Earlier Act 3 topics |
+| Power Up 1 | Grade 4 | Earlier PU1 units, including the separate welcome Unit 0 |
+| iShow Play 1 | Grade 4 | Act 3 and earlier Play 1 topics |
 
-Run `python -m http.server 8000` in this directory, then open `http://localhost:8000`.
+Each topic card compares only its subject with relevant PEP items, rather than adding every word from a loosely related PEP unit. Exact wording taught earlier in the same source path is treated as already known. Related forms stay in the additions column. Core lessons, cross-curricular sections, literature, review, and phonics appear as source topics. The PEP target and main-dialogue inventory currently covers Grades 3 and 4. PEP phonics targets are not indexed yet, so phonics cards show the source curriculum only.
 
-`catalog.json` is the published dataset. The Python scripts build it from locally held source files. `sources/` and logs stay ignored. Regeneration order after the inputs are present: `fetch_pep.py`, `ocr_teacher.py` for each Power Up Teacher's Book, `extract_teacher_blocks.py`, `read_wordlist.py`, `build_pep_inventory.py`, `build_powerup.py`, `build_ishow.py`, then `build_catalog.py`. The current scripts contain the local source paths used for this edition and are not required to run the site.
+The full previously collected catalog remains in [`catalog.json`](catalog.json) for later expansion to Power Up 2–4, iShow Play 2–4, and the higher PEP grades. The focused site reads [`focus.json`](focus.json).
+
+## Sources and data notes
+
+- [PEP textbook library](https://www.ai2book.com/diandu/)
+- Power Up 1 Teacher's Book scans in the local `PU - Think` Google Drive folder. The welcome Unit 0 is drawn from Teacher Book scan pages 18–21; Unit 1 includes the cross-curricular language on scan pages 35–36.
+- iShow Act 3 and Play 1 TLS workbooks in the local `curriculum maps` Google Drive folder. A3 means Act 3 and P1 means Play 1.
+
+The site publishes short teaching items and page references, not scans, images, audio, or complete readings. Some source pages are OCR scans; the scripts include manual corrections for joined or misspelled words. The map is a planning aid, so check the cited page before using a suggestion in an assessment.
+
+## Run and rebuild locally
+
+Run `python -m http.server 8000` in this directory and open `http://localhost:8000`.
+
+For the focused data, run `python build_focused.py` followed by `python focus_alignment.py`. The first script creates an intermediate `focus_sources.json` from the local source inventories. The second creates the published `focus.json`. The original full-catalog generation scripts remain available; their OCR and source files stay local under ignored `sources/`.
